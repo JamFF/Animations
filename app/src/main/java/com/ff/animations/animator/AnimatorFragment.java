@@ -51,7 +51,7 @@ public class AnimatorFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.tv) {
+        if (v.getId() == R.id.tv && mAnimator == null) {
             mAnimator = MyObjectAnimator.ofFloat(v, "scaleX", 1f, 2f);
             mAnimator.setInterpolator(new LinearInterpolator());
             mAnimator.setDuration(3000);
@@ -61,8 +61,10 @@ public class AnimatorFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onDestroyView() {
-        mAnimator.cancel();
-        VSYNCManager.INSTANCE.stopThread();
+        if (mAnimator != null) {
+            mAnimator.cancel();
+            VSYNCManager.INSTANCE.stopThread();
+        }
         super.onDestroyView();
     }
 }
