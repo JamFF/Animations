@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Animations</string>
+    <string name="scale">缩放</string>
+
+    <array name="main_items">
+        <item>手写动画框架</item>
+        <item>平行动画</item>
+    </array>
+</resources>
