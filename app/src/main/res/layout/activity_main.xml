@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/holo_blue_bright"
-    android:gravity="center"
+    android:background="@android:color/white"
     tools:context=".MainActivity">
 
-    <TextView
-        android:layout_width="100px"
-        android:layout_height="100px"
-        android:background="@android:color/holo_red_dark"
-        android:text="@string/scale" />
+    <com.ff.animations.splash.parallax.ParallaxContainer
+        android:id="@+id/parallax_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-</LinearLayout>
+
+    <ImageView
+        android:id="@+id/iv_man"
+        android:layout_width="67dp"
+        android:layout_height="202dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/man_run"
+        tools:ignore="ContentDescription" />
+</RelativeLayout>

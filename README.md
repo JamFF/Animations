@@ -27,7 +27,7 @@ Android Animations
 
     
 5. VSYNCManager
-    VSync 信号，屏幕刷新频率是 60Hz，也就是 1秒钟刷新 60次，也就是每隔 16ms 刷新一次。引入VSync 信号，相比每个动画设置定时器有三个优点：
+    VSync 信号，屏幕刷新频率是 60Hz，也就是每秒刷新 60次（每秒 60帧），也就是每隔 16ms 刷新一次。引入VSync 信号，相比每个动画设置定时器有三个优点：
     * 由系统统一触发完成绘制。
     * 每个动画绘制完成是公平的，不会因为当前帧没有完成绘制，出现阻塞的现象。举个例子，某个绘制花费时间是 24ms，在16ms时得到 VSync 信号后，无法进行正常渲染，这样就发生了丢帧现象。那么用户在 32ms内看到的会是同一帧画面。
     * 节省资源，由系统提供一个，如果每个动画都有自己的定时器，非常耗性能。
@@ -40,9 +40,15 @@ Android Animations
 7. FloatEvaluator
     估值器，计算下一帧的值。
 
-## 平行动画
+## 视差动画
 
-1. 自己实现容器
-2. 获取系统控件属性
-3. 动画设计
-4. 事件交互
+1. 自定义容器，ParallaxContainer
+2. 自定义LayoutInflater，ParallaxLayoutInflater
+3. 自定义动画
+4. 添加自定义属性
+
+参考：
+
+[Android -- 仿小红书欢迎界面](https://blog.csdn.net/weixin_34381687/article/details/85865968)  
+[XhsParallaxWelcome](https://github.com/w446108264/XhsParallaxWelcome)  
+[ParallaxPager](https://github.com/prolificinteractive/ParallaxPager)

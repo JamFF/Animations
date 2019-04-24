@@ -1,5 +1,6 @@
 package com.ff.animations;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.ff.animations.animator.AnimatorFragment;
+import com.ff.animations.splash.SplashActivity;
 import com.ff.animations.splash.SplashFragment;
 
 public class MainActivity extends AppCompatActivity implements MainFragment.OnListItemClickListener {
@@ -40,6 +42,9 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnLi
                 fragment = new AnimatorFragment();
                 break;
             case 1:
+                startActivity(new Intent(this, SplashActivity.class));
+                return;
+            case 2:
                 fragment = new SplashFragment();
                 break;
             default:
