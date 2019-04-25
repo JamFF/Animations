@@ -44,8 +44,8 @@ Android Animations
 
 1. 自定义容器，ParallaxContainer
 2. 自定义LayoutInflater，ParallaxLayoutInflater
-3. 自定义动画
-4. 添加自定义属性
+3. 原生控件添加自定义属性
+4. 自定义动画
 
 参考：
 

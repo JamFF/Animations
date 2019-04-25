@@ -66,10 +66,10 @@ public class ParallaxContainer extends FrameLayout {
     public void setUp(FragmentActivity activity, int... childIds) {
         if (IS_VIEWPAGER_2) {
             vp2 = new ViewPager2(getContext());
-            vp2.setId(R.id.parallax_pager);
             vp2.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
             for (int childId : childIds) {
+                // 根据布局文件数组，初始化所有的fragment
                 mFragments.add(ParallaxFragment.newInstance(childId));
             }
             mAdapter2 = new ParallaxPagerAdapter2(activity, mFragments);
@@ -77,7 +77,6 @@ public class ParallaxContainer extends FrameLayout {
             addView(vp2);
         } else {
             vp = new ViewPager(getContext());
-            vp.setId(R.id.parallax_pager);
             vp.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
             for (int childId : childIds) {
@@ -97,7 +96,6 @@ public class ParallaxContainer extends FrameLayout {
     public void setUp(Fragment fragment, int... childIds) {
         if (IS_VIEWPAGER_2) {
             vp2 = new ViewPager2(getContext());
-            vp2.setId(R.id.parallax_pager);
             vp2.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
             for (int childId : childIds) {
@@ -108,7 +106,6 @@ public class ParallaxContainer extends FrameLayout {
             addView(vp2);
         } else {
             vp = new ViewPager(getContext());
-            vp.setId(R.id.parallax_pager);
             vp.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
             for (int childId : childIds) {
@@ -158,64 +155,57 @@ public class ParallaxContainer extends FrameLayout {
             implements ViewPager.OnPageChangeListener {
 
         private WeakReference<ParallaxContainer> containerWeakReference;
-        AnimationDrawable animation;
 
         public OnPageChangeListener(ParallaxContainer container) {
             containerWeakReference = new WeakReference<>(container);
-            animation = (AnimationDrawable) containerWeakReference.get().iv_man.getBackground();
         }
 
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            // position是当前屏幕左侧的位置，不论左划右划
-            // positionOffset：从右往左，0到1变化，从左往右，1到0变化
-            // positionOffsetPixels：从右往左，从0到屏幕的宽度数值，从左往右，从屏幕的宽度数值到0
+            // position: 当前屏幕左侧的位置，不论左划右划
+            // positionOffset: 从右往左，0到1变化，从左往右，1到0变化
+            // positionOffsetPixels: 从右往左，从0到屏幕的宽度数值，从左往右，从屏幕的宽度数值到0
+
             ParallaxContainer container = containerWeakReference.get();
-            if (container == null) {
+            if (container == null || position < 0) {
                 return;
             }
-            // 动画
+
+            ParallaxFragment leftFragment = null;// 左侧的Fragment
+            if (position > 0) {
+                leftFragment = container.mFragments.get(position - 1);
+            }
+            ParallaxFragment rightFragment = container.mFragments.get(position);// 右侧的Fragment
+
             int containerWidth = container.getWidth();
-            ParallaxFragment outFragment = null;
 
-            try {
-                outFragment = container.mFragments.get(position - 1);
-            } catch (Exception e) {
-            }
-            //获取到退出的页面
-            ParallaxFragment inFragment = null;
-            try {
-                inFragment = container.mFragments.get(position);
-            } catch (Exception e) {
-            }
-
-            if (outFragment != null) {
-                //获取Fragment上所有的视图，实现动画效果
-                List<View> outViews = outFragment.getParallaxViews();
-                // 动画
-                if (outViews != null) {
+            if (leftFragment != null) {
+                // 获取Fragment上所有的视图，实现动画效果
+                List<View> leftViews = leftFragment.getParallaxViews();
+                if (leftViews != null) {
                     ParallaxViewTag tag;
-                    for (View view : outViews) {
+                    for (View view : leftViews) {
+                        // 获取标签，从标签上获取所有的动画参数
                         tag = (ParallaxViewTag) view.getTag(R.id.parallax_view_tag);
                         if (tag == null) {
                             continue;
                         }
-
+                        // 动画
                         view.setTranslationX((containerWidth - positionOffsetPixels) * tag.xIn);
                         view.setTranslationY(0 - (containerWidth - positionOffsetPixels) * tag.yIn);
                         view.setAlpha(1.0f - (containerWidth - positionOffsetPixels) * tag.alphaIn / containerWidth);
                     }
                 }
             }
-            if (inFragment != null) {
-                List<View> inViews = inFragment.getParallaxViews();
-                if (inViews != null) {
-                    for (View view : inViews) {
-                        ParallaxViewTag tag = (ParallaxViewTag) view.getTag(R.id.parallax_view_tag);
+            if (rightFragment != null) {
+                List<View> rightViews = rightFragment.getParallaxViews();
+                if (rightViews != null) {
+                    ParallaxViewTag tag;
+                    for (View view : rightViews) {
+                        tag = (ParallaxViewTag) view.getTag(R.id.parallax_view_tag);
                         if (tag == null) {
                             continue;
                         }
-                        // 仔细观察退出的fragment中view从原始位置开始向上移动，translationY应为负数
                         view.setTranslationX(0 - positionOffsetPixels * tag.xOut);
                         view.setTranslationY(0 - positionOffsetPixels * tag.yOut);
                         view.setAlpha(1.0f - positionOffsetPixels * tag.alphaOut / containerWidth);
@@ -247,6 +237,11 @@ public class ParallaxContainer extends FrameLayout {
 
         @Override
         public void onPageScrollStateChanged(int state) {
+            ParallaxContainer container = containerWeakReference.get();
+            if (container == null || container.iv_man == null) {
+                return;
+            }
+            AnimationDrawable animation = (AnimationDrawable) container.iv_man.getBackground();
             if (animation == null) {
                 return;
             }

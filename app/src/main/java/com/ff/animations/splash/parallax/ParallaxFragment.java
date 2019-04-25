@@ -28,6 +28,7 @@ public class ParallaxFragment extends Fragment {
     public static ParallaxFragment newInstance(@LayoutRes int layoutId) {
         ParallaxFragment fragment = new ParallaxFragment();
         Bundle args = new Bundle();
+        // Fragment中需要加载的布局文件id
         args.putInt(LAYOUT_ID, layoutId);
         fragment.setArguments(args);
         return fragment;

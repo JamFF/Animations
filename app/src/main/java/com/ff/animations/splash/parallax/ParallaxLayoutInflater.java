@@ -10,6 +10,7 @@ import android.view.View;
 import com.ff.animations.R;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
 
 /**
  * description: 自定义LayoutInflater，用于获取自定义的属性值
@@ -22,19 +23,8 @@ public class ParallaxLayoutInflater extends LayoutInflater {
 
     private ParallaxFragment mFragment;
 
-    protected ParallaxLayoutInflater(Context context) {
-        super(context);
-        Log.d(TAG, "ParallaxLayoutInflater: 1");
-    }
-
-    protected ParallaxLayoutInflater(LayoutInflater original, Context newContext) {
-        super(original, newContext);
-        Log.d(TAG, "ParallaxLayoutInflater: 2");
-    }
-
     protected ParallaxLayoutInflater(LayoutInflater original, Context newContext, ParallaxFragment fragment) {
-        this(original, newContext);
-        Log.d(TAG, "ParallaxLayoutInflater: 3");
+        super(original, newContext);
         mFragment = fragment;
         setFactory2(new ParallaxFactory(this));
     }
@@ -45,6 +35,12 @@ public class ParallaxLayoutInflater extends LayoutInflater {
         return new ParallaxLayoutInflater(this, newContext, mFragment);
     }
 
+    /**
+     * description: 自定义Factory2，解析自定义属性，保存到到View的Tag中
+     * 使用静态内部类避免内存泄漏
+     * author: FF
+     * time: 2019-04-24 10:01
+     */
     private static class ParallaxFactory implements Factory2 {
 
         private WeakReference<ParallaxLayoutInflater> inflaterWeakReference;
@@ -52,80 +48,77 @@ public class ParallaxLayoutInflater extends LayoutInflater {
         // 系统控件前缀
         private final String[] sClassPrefix = {
                 "android.widget.",
-                "android.view."
+                "android.view.",
+                "android.webkit"
         };
 
-        int[] attrIds = {
-                R.attr.a_in,
-                R.attr.a_out,
-                R.attr.x_in,
-                R.attr.x_out,
-                R.attr.y_in,
-                R.attr.y_out};
-
-        public ParallaxFactory(ParallaxLayoutInflater inflater) {
+        private ParallaxFactory(ParallaxLayoutInflater inflater) {
             inflaterWeakReference = new WeakReference<>(inflater);
         }
 
         @Override
         public View onCreateView(View parent, String name, Context context, AttributeSet attrs) {
-            Log.d(TAG, "onCreateView: ");
-            View view = createMyView(name, attrs);
+            View view = createMyView(name, context, attrs);
             if (view != null) {
-                TypedArray a = context.obtainStyledAttributes(attrs, attrIds);
+                // 从AttributeSet取出自定义属性
+                TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.ParallaxContainer);
                 if (a != null) {
                     if (a.length() > 0) {
+                        // 封装成Bean
                         ParallaxViewTag tag = new ParallaxViewTag();
-                        tag.alphaIn = a.getFloat(0, 0f);
-                        tag.alphaOut = a.getFloat(1, 0f);
-                        tag.xIn = a.getFloat(2, 0f);
-                        tag.xOut = a.getFloat(3, 0f);
-                        tag.yIn = a.getFloat(4, 0f);
-                        tag.yOut = a.getFloat(5, 0f);
+                        tag.alphaIn = a.getFloat(R.styleable.ParallaxContainer_a_in, 0f);
+                        tag.alphaOut = a.getFloat(R.styleable.ParallaxContainer_a_out, 0f);
+                        tag.xIn = a.getFloat(R.styleable.ParallaxContainer_x_in, 0f);
+                        tag.xOut = a.getFloat(R.styleable.ParallaxContainer_x_out, 0f);
+                        tag.yIn = a.getFloat(R.styleable.ParallaxContainer_y_in, 0f);
+                        tag.yOut = a.getFloat(R.styleable.ParallaxContainer_y_out, 0f);
+                        // 设置到View的Tag中
                         view.setTag(R.id.parallax_view_tag, tag);
                     }
                     a.recycle();
                 }
                 if (inflaterWeakReference.get() != null) {
+                    // 添加到集合中
                     inflaterWeakReference.get().mFragment.getParallaxViews().add(view);
                 }
             }
-            Log.i(TAG, "onCreateView:view " + view);
             return view;
         }
 
         @Override
         public View onCreateView(String name, Context context, AttributeSet attrs) {
-            Log.d(TAG, "onCreateView: ");
             return null;
         }
 
         /**
-         * 通过控件名和属性信息，获取View
+         * 通过控件名和属性信息，创建View
          *
-         * @param name  控件名
-         * @param attrs 属性信息
+         * @param name    控件名
+         * @param context 上下文
+         * @param attrs   属性信息
          * @return View
          */
-        private View createMyView(String name, AttributeSet attrs) {
+        private View createMyView(String name, Context context, AttributeSet attrs) {
+            View view = null;
             if (name.contains(".")) {
-                // 自定义的控件，或者android.support.v7.widget.RecyclerView的完整类名
-                return reflectView(name, null, attrs);
+                // 包名+类名的控件，例如自定义的控件以及android.support.v7.widget.RecyclerView类似的系统控件
+                // view = reflectView(name, null, attrs);// 通过系统API获取
+                view = reflectView(name, null, context, attrs);// 通过反射获取
             } else {
-                // 系统控件
+                // 不含包名的系统控件，例如ImageView
                 for (String prefix : sClassPrefix) {
-                    View view = reflectView(name, prefix, attrs);
-                    // 获取系统控件的自定义属性
+                    // view = reflectView(name, prefix, attrs);// 通过系统API获取
+                    view = reflectView(name, prefix, context, attrs);// 通过反射获取
                     if (view != null) {
-                        return view;
+                        break;
                     }
                 }
             }
-            return null;
+            return view;
         }
 
         /**
-         * 反射创建View
+         * 调用LayoutInflater的API，创建View
          *
          * @param name   控件名
          * @param prefix 如果name是包名+类名，传null
@@ -145,6 +138,32 @@ public class ParallaxLayoutInflater extends LayoutInflater {
                 e.printStackTrace();
                 return null;
             }
+        }
+
+        /**
+         * 通过反射创建View
+         *
+         * @param name    控件名
+         * @param prefix  如果name是包名+类名，传null
+         *                如果name只有类名，传入包名
+         * @param context 上下文
+         * @param attrs   属性信息
+         * @return View
+         */
+        private View reflectView(String name, String prefix, Context context, AttributeSet attrs) {
+            try {
+                Class<?> clazz;
+                if (prefix == null) {
+                    clazz = Class.forName(name);
+                } else {
+                    clazz = Class.forName(prefix + name);
+                }
+                Constructor constructor = clazz.getConstructor(Context.class, AttributeSet.class);
+                return (View) constructor.newInstance(context, attrs);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
         }
     }
 }
