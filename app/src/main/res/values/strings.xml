@@ -3,10 +3,12 @@
     <string name="scale">缩放</string>
     <string name="register">注册帐号</string>
     <string name="login">手机登录</string>
+    <string name="move">点击拖动</string>
 
     <array name="main_items">
         <item>手写动画框架</item>
         <item>Activity视差动画</item>
         <item>Fragment视差动画</item>
+        <item>拖动控件</item>
     </array>
 </resources>
